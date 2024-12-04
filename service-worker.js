@@ -2,7 +2,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open('my-pemasukanpengeluaran').then((cache) => {
             return cache.addAll([
-                '/pemasukanpengeluaran.github.io/index.html',
+                'https://alifarsum.github.io/pemasukanpengeluaran.github.io/index.html',
                 // Tambahkan file lainnya yang ingin dicache
             ]);
         })
