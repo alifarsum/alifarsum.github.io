@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <link rel="manifest" href="data:application/json,{"name":"Catatan Keuangan","short_name":"Keuangan","description":"Aplikasi catatan keuangan sederhana","start_url":"/","display":"standalone","background_color":"#6C3483","theme_color":"#6C3483","icons":[{"src":"/path/to/icon.png","sizes":"192x192","type":"image/png"}]}">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                self.addEventListener('install', function (event) {
+                    event.waitUntil(
+                        caches.open('catatan-keuangan').then(function (cache) {
+                            return cache.addAll([
+                                '/',
+                                '/index.html',
+                                '/path/to/other/files',
+                                // Add other paths or resources that need to be cached
+                            ]);
+                        })
+                    );
+                });
+
+                self.addEventListener('fetch', function (event) {
+                    event.respondWith(
+                        caches.match(event.request).then(function (response) {
+                            return response || fetch(event.request);
+                        })
+                    );
+                });
+            `));
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color"content="#6C3483">
+    <title>Catatan Keuangan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+            body {
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Mengatur tinggi viewport */
+    background: linear-gradient(to bottom, #6C3483, #000000);
+    background-attachment: fixed; /* Background tetap di tempat */
+    background-size: cover; /* Memastikan background mencakup seluruh layar */
+    color: #ffffff; /* Untuk warna teks yang kontras */
+}
+
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .text-end { text-align: end; }
+            .fw-bold { font-weight: bold; }
+        </style>
+</head>
+<body class="container mt-5">
+
+    <h1 class="mb-4 text-center">Catatan Keuangan</h1>
+    <center>
+    <hr width="90%">
+    </center>
+    <h4 class="mb-4 text-center">Coded By Rahmad Alif</h4>
+    <p class="alert alert-danger">
+      <text class="text-success">INFO:</text>  Jika kamu ganti HP,maka data di hp yang baru akan kosong.Backup data dari hp lama lalu klik import data ke hp baru untuk menyalin data terkini dari hp lama anda.
+    </p>
+
+    <div class="mb-3">
+        <!-- Form input untuk jenis transaksi -->
+        <label for="jenisTransaksi" class="form-label">Jenis Transaksi:</label>
+        <select id="jenisTransaksi" class="form-select">
+            <option value="pemasukan">Pemasukan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <!-- Form input untuk jumlah transaksi -->
+        <label for="jumlah" class="form-label">Jumlah:</label>
+        <input type="number" id="jumlah" class="form-control" placeholder="Masukkan jumlah">
+    </div>
+
+<div class="mb-3">
+        <!-- Form input untuk tanggal transaksi -->
+        <label for="tanggal" class="form-label">Tanggal:</label>
+        <div class="input-group">
+            <input type="date" id="tanggal" class="form-control">
+            <div class="input-group-text" id="basic-addon2">
+                <span id="hariIndonesia" class="fw-bold"></span>
+            </div>
+        </div>
+    </div>
+    <!-- Tombol untuk menambah transaksi -->
+    <button onclick="tambahTransaksi()" class="btn btn-primary mb-3">Tambah Transaksi</button>
+
+    <div class="mb-3">
+        <!-- Form untuk filter transaksi -->
+        <label for="filter" class="form-label">Filter:</label>
+        <select id="filter" class="form-select" onchange="filterTransaksi()">
+            <option value="all">Semua Transaksi</option>
+            <option value="hari">Hari Ini</option>
+            <option value="minggu">Minggu Ini</option>
+            <option value="bulan">Bulan Ini</option>
+            <option value="tahun">Tahun Ini</option>
+        </select>
+    </div>
+
+    <h2 class="mb-3">Tabel keuangan</h2>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Tanggal</th>
+                    <th scope="col">Jenis</th>
+                    <th scope="col">Jumlah</th>
+                    <th scope="col">Edit</th>
+                    <th scope="col">Delete</th>
+                </tr>
+            </thead>
+            <tbody id="daftarTransaksi">
+                <!-- Data transaksi akan ditampilkan di sini -->
+            </tbody>
+            <tfoot>
+                <!-- Total Pemasukan, Total Pengeluaran, dan Saldo Total -->
+                <tr>
+                    <td colspan="2" class="text-end fw-bold">Total Pemasukan:</td>
+                    <td id="totalPemasukan" class="fw-bold">Rp. 0,00</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-end fw-bold">Total Pengeluaran:</td>
+                    <td id="totalPengeluaran" class="fw-bold">Rp. 0,00</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-end fw-bold">Saldo Total:</td>
+                    <td id="saldoTotal" class="fw-bold">Rp. 0,00</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+    
+    <!-- Dropdown Bootstrap untuk Impor Data -->
+    <div class="dropdown d-flex mt-1">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="importDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            Recovery Data
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="importDropdown">
+            <li><label class="dropdown-item" for="fileInput">Pilih File</label></li>
+        </ul>
+        <input type="file" id="fileInput" class="visually-hidden" accept=".json" onchange="importData()">
+    </div>
+
+    <!-- Dropdown Bootstrap untuk Reset, Export XLS, Export PDF, dan Backup Data -->
+    <div class="dropdown d-flex mt-1">
+        <button class="btn btn-danger dropdown-toggle me-2" type="button" id="resetExportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            Pengaturan
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="resetExportDropdown">
+            <li><button class="dropdown-item" onclick="resetData()">Hapus Semua Data(tanpa backup)</button></li>
+            <li><button class="dropdown-item" onclick="exportToXLS()">Export to XLS (excel)</button></li>
+            <li><button class="dropdown-item" onclick="exportToPDF()">Export to PDF</button></li>
+            <li><button class="dropdown-item" onclick="exportData()">Backup Data (JSON)</button></li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Fungsi untuk ekspor data
+    function exportData() {
+        var dataToExport = JSON.stringify(storedData);
+
+        var blob = new Blob([dataToExport], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'catatan_keuangan.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    //import data
+    function importData() {
+        var fileInput = document.getElementById('fileInput');
+        var file = fileInput.files[0];
+
+        if (file) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                var importedData = JSON.parse(e.target.result);
+
+                // Validasi struktur data jika diperlukan
+                if (isValidImportedData(importedData)) {
+                    storedData = importedData;
+                    simpanData();
+                    loadData();
+                    alert('Data berhasil diimpor!');
+                } else {
+                    alert('Format file tidak sesuai atau tidak dapat dibaca.');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    }
+    // Fungsi untuk memvalidasi struktur data yang diimpor
+    function isValidImportedData(data) {
+        return data && Array.isArray(data.transaksi);
+        // Tambahkan validasi sesuai dengan struktur data Anda
+    }
+
+    // Fungsi untuk mereset data
+    function resetData() {
+        var konfirmasi = prompt("Untuk mereset data, masukkan kata kunci keamanan  \n<hapusdata> tanpa <>:");
+
+        if (konfirmasi === "hapusdata") {
+            storedData.transaksi = [];
+            simpanData();
+            loadData();
+        } else {
+            alert("Kata kunci keamanan salah. Data tidak dihapus.");
+        }
+    }
+
+    // Fungsi untuk menyimpan data ke localStorage
+    function simpanData() {
+        localStorage.setItem(storageKey, JSON.stringify(storedData));
+    }
+    
+    
+        var storageKey = "catatanKeuanganData";
+        var storedData = JSON.parse(localStorage.getItem(storageKey)) || { transaksi: [] };
+
+        var jenisTransaksiSelect = document.getElementById("jenisTransaksi");
+        var jumlahInput = document.getElementById("jumlah");
+        var tanggalInput = document.getElementById("tanggal");
+        var daftarTransaksi = document.getElementById("daftarTransaksi");
+        var totalPemasukanCell = document.getElementById("totalPemasukan");
+        var totalPengeluaranCell = document.getElementById("totalPengeluaran");
+        var saldoTotalCell = document.getElementById("saldoTotal");
+        var filterSelect = document.getElementById("filter");
+
+        // Fungsi untuk menambah transaksi
+        function tambahTransaksi() {
+            var jenisTransaksi = jenisTransaksiSelect.value;
+            var jumlah = parseFloat(jumlahInput.value);
+            var tanggal = tanggalInput.value;
+
+            if (jenisTransaksi && !isNaN(jumlah) && jumlah > 0 && tanggal) {
+                storedData.transaksi.push({ jenis: jenisTransaksi, jumlah: jumlah, tanggal: tanggal });
+                simpanData();
+                loadData();
+                updateHariIndonesia(tanggal); // Tambah pemanggilan fungsi ini setelah menambah transaksi
+            } else {
+                alert("Masukkan jenis transaksi yang valid, jumlah lebih dari 0, dan pilih tanggal");
+            }
+        }
+
+        // Fungsi untuk menampilkan data transaksi
+        function loadData() {
+            daftarTransaksi.innerHTML = "";
+            var totalPemasukan = 0;
+            var totalPengeluaran = 0;
+
+            storedData.transaksi.forEach(function (transaksi, index) {
+                var row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${transaksi.tanggal}  (${getHariIndonesia(transaksi.tanggal)})</td>
+                    <td>${transaksi.jenis}</td>
+                    <td>${formatRupiah(transaksi.jumlah)}</td>
+                    <td><button onclick="editTransaksi(${index})" class="btn btn-warning btn-sm">Edit</button></td>
+                    <td><button onclick="deleteTransaksi(${index})" class="btn btn-danger btn-sm">Delete</button></td>
+                `;
+                daftarTransaksi.appendChild(row);
+
+                if (transaksi.jenis === "pemasukan") {
+                    totalPemasukan += transaksi.jumlah;
+                } else if (transaksi.jenis === "pengeluaran") {
+                    totalPengeluaran += transaksi.jumlah;
+                }
+            });
+
+            totalPemasukanCell.textContent = " " + formatRupiah(totalPemasukan);
+            totalPengeluaranCell.textContent = " " + formatRupiah(totalPengeluaran);
+            saldoTotalCell.textContent = " " + formatRupiah(totalPemasukan - totalPengeluaran);
+        }
+
+        // Fungsi untuk mengedit transaksi
+        function editTransaksi(index) {
+            var editedTransaksi = prompt("Masukkan perubahan transaksi (format: jenisTransaksi,jumlah,tanggal)", `${storedData.transaksi[index].jenis},${storedData.transaksi[index].jumlah},${storedData.transaksi[index].tanggal}`);
+
+            if (editedTransaksi) {
+                var [jenisTransaksi, jumlah, tanggal] = editedTransaksi.split(',');
+
+                if (jenisTransaksi && !isNaN(jumlah) && jumlah > 0 && tanggal) {
+                    storedData.transaksi[index] = { jenis: jenisTransaksi, jumlah: parseFloat(jumlah), tanggal: tanggal };
+                    simpanData();
+                    loadData();
+                } else {
+                    alert("Masukkan jenis transaksi yang valid, jumlah lebih dari 0, dan pilih tanggal");
+                }
+            }
+        }
+
+        // Fungsi untuk menghapus transaksi
+        function deleteTransaksi(index) {
+            var konfirmasi = confirm("Apakah Anda yakin ingin menghapus transaksi ini?");
+
+            if (konfirmasi) {
+                storedData.transaksi.splice(index, 1);
+                simpanData();
+                loadData();
+            }
+        }
+
+
+
+        // Fungsi untuk menyimpan data ke localStorage
+        function simpanData() {
+            localStorage.setItem(storageKey, JSON.stringify(storedData));
+        }
+
+        // Fungsi untuk memformat angka ke format mata uang
+// Fungsi untuk memformat angka ke format mata uang
+        function formatRupiah(angka) {
+            return angka.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+        }
+
+        // Fungsi untuk mendapatkan nama hari Indonesia
+        function getHariIndonesia(dateString) {
+            var days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            var date = new Date(dateString);
+            var dayIndex = date.getDay();
+            return days[dayIndex];
+        }
+
+        // Fungsi untuk memperbarui tampilan hari Indonesia
+        function updateHariIndonesia(dateString) {
+            var hariIndonesiaElement = document.getElementById('hariIndonesia');
+            var hariIndonesia = getHariIndonesia(dateString);
+            hariIndonesiaElement.textContent = hariIndonesia;
+        }
+        // Mendapatkan nomor minggu dalam tahun
+        function getWeekNumber(date) {
+            var d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+            var yearStart = new Date(d.getFullYear(), 0, 1);
+            var weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+            return weekNo;
+        }
+
+        // Memuat data saat pertama kali halaman dimuat.
+        loadData();
+        
+// Fungsi untuk export data ke format XLS
+function exportToXLS() {
+    var data = storedData.transaksi.map(function (transaksi) {
+        return [transaksi.tanggal, transaksi.jenis, transaksi.jumlah];
+    });
+
+    var columns = ["Tanggal", "Jenis", "Jumlah"];
+
+    // Tambahkan baris total
+    var totalPemasukan = storedData.transaksi.reduce(function (total, transaksi) {
+        return transaksi.jenis === "pemasukan" ? total + transaksi.jumlah : total;
+    }, 0);
+
+    var totalPengeluaran = storedData.transaksi.reduce(function (total, transaksi) {
+        return transaksi.jenis === "pengeluaran" ? total + transaksi.jumlah : total;
+    }, 0);
+
+    var saldoTotal = totalPemasukan - totalPengeluaran;
+
+    data.push(["Total Pemasukan", "", totalPemasukan]);
+    data.push(["Total Pengeluaran", "", totalPengeluaran]);
+    data.push(["Saldo Total", "", saldoTotal]);
+
+    // Create a workbook
+    var ws = XLSX.utils.aoa_to_sheet([["Tanggal", "Jenis", "Jumlah"], ...data]);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transaksi");
+
+    // Export ke file XLS
+    XLSX.writeFile(wb, "catatan_keuangan.xlsx");
+}
+
+
+// Fungsi untuk export data ke format PDF
+function exportToPDF() {
+    var data = storedData.transaksi.map(function (transaksi) {
+        return [transaksi.tanggal, transaksi.jenis, transaksi.jumlah];
+    });
+
+    var columns = ["Tanggal", "Jenis", "Jumlah"];
+
+    // Create a table element
+    var table = document.createElement("table");
+    var thead = table.createTHead();
+    var tbody = table.createTBody();
+
+    // Add columns to the table header
+    var headerRow = thead.insertRow();
+    columns.forEach(function (column) {
+        var th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+    });
+
+    // Add data to the table body
+    data.forEach(function (rowData) {
+        var row = tbody.insertRow();
+        rowData.forEach(function (cellData) {
+            var cell = row.insertCell();
+            cell.textContent = cellData;
+        });
+    });
+
+    // Add tfoot (total) to the table
+    var tfoot = table.createTFoot();
+    var totalRow1 = tfoot.insertRow();
+    var totalRow2 = tfoot.insertRow();
+    var totalRow3 = tfoot.insertRow();
+
+    var totalLabelCell = document.createElement("td");
+    totalLabelCell.colSpan = 2;
+    totalLabelCell.classList.add("text-end", "fw-bold");
+
+    var totalValueCell = document.createElement("td");
+    totalValueCell.classList.add("fw-bold");
+
+    totalRow1.appendChild(totalLabelCell.cloneNode());
+    totalRow2.appendChild(totalLabelCell.cloneNode());
+    totalRow3.appendChild(totalLabelCell.cloneNode());
+
+    totalRow1.appendChild(totalValueCell.cloneNode());
+    totalRow2.appendChild(totalValueCell.cloneNode());
+    totalRow3.appendChild(totalValueCell.cloneNode());
+
+    totalRow1.cells[0].textContent = "Total Pemasukan:";
+    totalRow2.cells[0].textContent = "Total Pengeluaran:";
+    totalRow3.cells[0].textContent = "Saldo Total:";
+
+    // Calculate total values
+    var totalPemasukan = storedData.transaksi.reduce(function (total, transaksi) {
+        return transaksi.jenis === "pemasukan" ? total + transaksi.jumlah : total;
+    }, 0);
+
+    var totalPengeluaran = storedData.transaksi.reduce(function (total, transaksi) {
+        return transaksi.jenis === "pengeluaran" ? total + transaksi.jumlah : total;
+    }, 0);
+
+    var saldoTotal = totalPemasukan - totalPengeluaran;
+
+    totalRow1.cells[1].textContent = "Rp. " + formatRupiah(totalPemasukan);
+    totalRow2.cells[1].textContent = "Rp. " + formatRupiah(totalPengeluaran);
+    totalRow3.cells[1].textContent = "Rp. " + formatRupiah(saldoTotal);
+
+    // Apply some basic styling for print media
+    var printStyles = `
+        <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .text-end { text-align: end; }
+            .fw-bold { font-weight: bold; }
+        </style>
+    `;
+
+    // Create a new window for printing
+    var printWindow = window.open('', '_blank');
+    printWindow.document.write('<html><head><title>Catatan Keuangan</title>');
+    printWindow.document.write(printStyles);
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h1>Catatan Keuangan</h1>');
+    printWindow.document.write(table.outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    // Trigger the print dialog
+    printWindow.print();
+}
+
+// Fungsi untuk memfilter transaksi
+function filterTransaksi() {
+    var filter = filterSelect.value;
+    var filteredTransaksi = [];
+
+    var now = new Date();
+    var today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    storedData.transaksi.forEach(function (transaksi) {
+        var transaksiDate = new Date(transaksi.tanggal);
+
+        if (filter === "all") {
+            filteredTransaksi.push(transaksi);
+        } else if (filter === "hari" && transaksi.tanggal === today) {
+            filteredTransaksi.push(transaksi);
+        } else if (filter === "minggu") {
+    // Hari ini
+    var today = new Date();
+    // Tentukan hari awal minggu ini (7 hari sebelumnya termasuk hari ini)
+    var startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - (today.getDay())); // Hari Senin dalam minggu ini
+    
+    // Tentukan hari akhir minggu ini (7 hari setelah startOfWeek)
+    var endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    // Periksa apakah tanggal transaksi berada dalam rentang 7 hari
+    if (transaksiDate >= startOfWeek && transaksiDate <= endOfWeek) {
+        filteredTransaksi.push(transaksi);
+    }
+} else if (filter === "bulan") {
+            var currentMonth = now.getMonth();
+            var currentYear = now.getFullYear();
+
+            if (transaksiDate.getMonth() === currentMonth && transaksiDate.getFullYear() === currentYear) {
+                filteredTransaksi.push(transaksi);
+            }
+        } else if (filter === "tahun") {
+            if (transaksiDate.getFullYear() === now.getFullYear()) {
+                filteredTransaksi.push(transaksi);
+            }
+        }
+    });
+
+    tampilkanFilteredTransaksi(filteredTransaksi);
+}
+
+// Fungsi untuk menampilkan transaksi yang difilter
+function tampilkanFilteredTransaksi(transactions) {
+    daftarTransaksi.innerHTML = "";
+    var totalPemasukan = 0;
+    var totalPengeluaran = 0;
+
+    transactions.forEach(function (transaksi, index) {
+        var row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${transaksi.tanggal} (${getHariIndonesia(transaksi.tanggal)})</td>
+            <td>${transaksi.jenis}</td>
+            <td>${formatRupiah(transaksi.jumlah)}</td>
+            <td><button onclick="editTransaksi(${index})" class="btn btn-warning btn-sm">Edit</button></td>
+            <td><button onclick="deleteTransaksi(${index})" class="btn btn-danger btn-sm">Delete</button></td>
+        `;
+        daftarTransaksi.appendChild(row);
+
+        if (transaksi.jenis === "pemasukan") {
+            totalPemasukan += transaksi.jumlah;
+        } else if (transaksi.jenis === "pengeluaran") {
+            totalPengeluaran += transaksi.jumlah;
+        }
+    });
+
+    totalPemasukanCell.textContent = " " + formatRupiah(totalPemasukan);
+    totalPengeluaranCell.textContent = " " + formatRupiah(totalPengeluaran);
+    saldoTotalCell.textContent = " " + formatRupiah(totalPemasukan - totalPengeluaran);
+}
+function loadData() {
+    filterTransaksi(); // Tambahkan pemanggilan fungsi ini
+}
+
+    </script>
+
+</body>
+<!-- Script untuk export ke format XLS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+
+</html>
