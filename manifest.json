@@ -2,7 +2,7 @@
   "name": "Catatan Keuangan",
   "short_name": "Catat Uang",
   "description": "Aplikasi pencatat pemasukan pengeluaran",
-  "start_url": "/",
+  "start_url": "https://alifarsum.github.io/pemasukanpengeluaran.github.io/",
   "display": "standalone",
   "background_color": "#000",
   "theme_color": "#000000",
